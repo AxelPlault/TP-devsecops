@@ -12,6 +12,6 @@ data:
       </head>
       <body>
         <h1>Page déployée depuis GitHub avec ArgoCD</h1>
-        <p>Bienvenue au TP GitOps d’Axel Plault 🎉</p>
+        <p>Bienvenue au TP GitOps d’Axel Plault </p>
       </body>
     </html>

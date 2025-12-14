@@ -1,0 +1,14 @@
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: node-app-vuln-service
+  namespace: node-app-vuln
+spec:
+  selector:
+    app: node-app-vuln
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+  type: NodePort

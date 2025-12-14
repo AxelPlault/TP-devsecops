@@ -1,0 +1,21 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: node-app-vuln
+  namespace: node-app-vuln
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: node-app-vuln
+  template:
+    metadata:
+      labels:
+        app: node-app-vuln
+    spec:
+      containers:
+        - name: node-app-vuln
+          image: axelplault/node-app-vuln:latest    # <-- ton image Docker Hub
+          ports:
+            - containerPort: 3000

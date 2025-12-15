@@ -4,8 +4,8 @@ name: CI/CD - Trivy Scan Python Apps
 on:
   push:
     branches:
-      - main
       - ci-cd-trivy-test
+      - main
 
 jobs:
   trivy-scan:
@@ -19,22 +19,15 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Build Docker image
-        run: |
-          docker build -t ${{ matrix.app }} -f ${{ matrix.app }}/Dockerfile ${{ matrix.app }}
+        run: docker build -t ${{ matrix.app }} -f ${{ matrix.app }}/Dockerfile ${{ matrix.app }}
 
       - name: Install Trivy
         run: |
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
-
       - name: Check Trivy
         run: trivy --version
 
@@ -44,3 +37,7 @@ jobs:
             trivy image --exit-code 1 --severity HIGH,CRITICAL ${{ matrix.app }}
           else
             trivy image --exit-code 0 --severity HIGH,CRITICAL ${{ matrix.app }}
+          fi
+
+    # Autoriser l'échec du job app-vuln sans casser le workflow global
+    continue-on-error: ${{ matrix.app == 'app-vuln' }}

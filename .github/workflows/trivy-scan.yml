@@ -8,13 +8,9 @@ on:
       - main
 
 jobs:
-  trivy-scan:
+  app-sec:
+    name: trivy-scan (app-sec)
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        app: [app-sec, app-vuln]
-
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -22,8 +18,8 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build Docker image
-        run: docker build -t ${{ matrix.app }} -f ${{ matrix.app }}/Dockerfile ${{ matrix.app }}
+      - name: Build app-sec image
+        run: docker build -t app-sec -f app-sec/Dockerfile app-sec
 
       - name: Install Trivy
         run: |
@@ -31,13 +27,30 @@ jobs:
       - name: Check Trivy
         run: trivy --version
 
-      - name: Scan image with Trivy
-        run: |
-          if [ "${{ matrix.app }}" = "app-vuln" ]; then
-            trivy image --exit-code 1 --severity HIGH,CRITICAL ${{ matrix.app }}
-          else
-            trivy image --exit-code 0 --severity HIGH,CRITICAL ${{ matrix.app }}
-          fi
+      # Non bloquant (toujours vert pour app-sec)
+      - name: Scan app-sec with Trivy (non-blocking)
+        run: trivy image --exit-code 0 --severity HIGH,CRITICAL app-sec
 
-    # Autoriser l'échec du job app-vuln sans casser le workflow global
-    continue-on-error: ${{ matrix.app == 'app-vuln' }}
+  app-vuln:
+    name: trivy-scan (app-vuln)
+    runs-on: ubuntu-latest
+    continue-on-error: true   # <-- Autorise l'échec sans casser le run global
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build app-vuln image
+        run: docker build -t app-vuln -f app-vuln/Dockerfile app-vuln
+
+      - name: Install Trivy
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
+      - name: Check Trivy
+        run: trivy --version
+
+      # Bloquant pour montrer le rouge sur app-vuln
+      - name: Scan app-vuln with Trivy (blocking)
+        run: trivy image --exit-code 1 --severity HIGH,CRITICAL app-vuln
